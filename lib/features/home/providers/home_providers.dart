@@ -10,6 +10,8 @@ import 'package:maneja/services/api_stock_service.dart';
 import 'package:maneja/services/api_transaction_service.dart';
 import 'package:maneja/services/transaction_service.dart';
 import 'package:maneja/models/app_notification.dart';
+import 'package:maneja/services/api_briefing_service.dart';
+import 'package:maneja/models/briefing.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(baseUrl: ApiConfig.baseUrl);
@@ -144,5 +146,15 @@ final recentTransactionsProvider = Provider<AsyncValue<List<Transaction>>>((ref)
       );
     return sorted.take(10).toList();
   });
+});
+
+
+final briefingServiceProvider = Provider<ApiBriefingService>((ref) {
+  return ApiBriefingService(ref.watch(apiClientProvider));
+});
+
+final briefingProvider = FutureProvider<Briefing>((ref) async {
+  final service = ref.watch(briefingServiceProvider); 
+  return service.fetchBriefing();
 });
 

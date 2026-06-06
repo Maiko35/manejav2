@@ -5,6 +5,7 @@ import 'package:maneja/core/theme/app_theme.dart';
 import 'package:maneja/core/widgets/dashboard_widgets.dart';
 import 'package:maneja/features/home/providers/home_providers.dart';
 import 'package:maneja/features/home/presentation/notifications_screen.dart';
+import 'package:maneja/models/briefing.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -14,6 +15,7 @@ class HomeScreen extends ConsumerWidget {
     final summary = ref.watch(homeSummaryProvider);
     final recent = ref.watch(recentTransactionsProvider);
     final notifications = ref.watch(notificationsProvider);
+    final briefing = ref.watch(briefingProvider);
 
     final now = DateTime.now();
     final dateText = DateFormat('EEE, d MMM').format(now);
@@ -153,6 +155,12 @@ class HomeScreen extends ConsumerWidget {
                     Expanded(child: Text('')),
                   ],
                 ),
+              ),
+            const SizedBox(height: 20),
+              briefing.when(
+                data: (b) => _BriefingCard(briefing: b),
+                loading: () => const _BriefingCardSkeleton(),
+                error: (_, __) => const SizedBox.shrink(),
               ),
               const SizedBox(height: 28),
               notifications.when(
@@ -344,3 +352,184 @@ class _IconCircleButton extends StatelessWidget {
   }
 }
 
+
+class _BriefingCard extends StatelessWidget {
+  const _BriefingCard({required this.briefing});
+  final Briefing briefing;
+
+  @override
+  Widget build(BuildContext context) {
+    final forecast = briefing.forecast;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: Colors.black87, size: 12),
+                    SizedBox(width: 4),
+                    Text(
+                      'AI BRIEFING',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            briefing.briefingText,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            height: 1,
+            color: Colors.grey.withOpacity(0.2),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _ForecastChip(
+                icon: Icons.trending_up_rounded,
+                label: 'Today',
+                value: '${(forecast.tomorrowForecastUgx / 1000).toStringAsFixed(0)}K UGX',
+              ),
+              const SizedBox(width: 10),
+              _ForecastChip(
+                icon: Icons.schedule_rounded,
+                label: 'Peak',
+                value: '${forecast.peakHour}:00',
+              ),
+              const SizedBox(width: 10),
+              _ForecastChip(
+                icon: Icons.star_rounded,
+                label: 'Best day',
+                value: forecast.bestDay,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ForecastChip extends StatelessWidget {
+  const _ForecastChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: Colors.black54, size: 14),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.black54,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BriefingCardSkeleton extends StatelessWidget {
+  const _BriefingCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 160,
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E3A5F).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 10),
+            Text(
+              'Getting your briefing...',
+              style: TextStyle(
+                color: Color(0xFF6B7280),
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
